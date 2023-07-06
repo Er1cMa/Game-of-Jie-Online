@@ -3,13 +3,12 @@ from threading import Thread
 
 
 def client_game():
-    hp = 0
+    hp = 2
     energy = 0
     fk = 1
-    choice = ''
     list_choices(energy, fk)
     print("Waiting for the server...")
-    tcp_socket.recv(1024).decode("UTF-8")
+    tcp_socket.recv(1024).decode("UTF-8")  # begins with?
 
 
 def recv_choice():
@@ -123,6 +122,10 @@ def list_choices(energy, free_knife):
 
 def calc_result():
     global p0_hp, p1_hp, p0_energy, p1_energy, p0_fk, p1_fk, p0_choice, p1_choice
+    if p0_choice == 'n':
+        p0_fk -= 1
+    if p1_choice == 'n':
+        p1_fk -= 1
 
 
 while 1:
