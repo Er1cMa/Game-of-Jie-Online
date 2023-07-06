@@ -8,6 +8,8 @@ def client_game():
     fk = 1
     choice = ''
     list_choices(energy, fk)
+    print("Waiting for the server...")
+    tcp_socket.recv(1024).decode("UTF-8")
 
 
 def recv_choice():
