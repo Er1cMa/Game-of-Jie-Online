@@ -1,2 +1,2 @@
 # Game-of-Jie-Online
-This is a online version of the game of jie.
+This is an online version of the game of jie.
