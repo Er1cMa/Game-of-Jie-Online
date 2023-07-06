@@ -3,7 +3,7 @@ from threading import Thread
 
 
 def client_game():
-    hp = 2
+    # hp = 2
     energy = 0
     fk = 1
     list_choices(energy, fk)
