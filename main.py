@@ -26,8 +26,8 @@ def recv_choice():
 
 def server_game():
     global p0, p1
-    p0 = {'hp': 2, 'energy': 0, 'fk': 1, 'choice': ''}
-    p1 = {'hp': 2, 'energy': 0, 'fk': 1, 'choice': ''}
+    p0 = {'hp': 2, 'energy': 2, 'fk': 1, 'choice': ''}
+    p1 = {'hp': 2, 'energy': 2, 'fk': 1, 'choice': ''}
     while 1:
         thread_connect = Thread(target=recv_choice)
         thread_choose = Thread(target=list_choices, args=(p0['energy'], p0['fk']))
