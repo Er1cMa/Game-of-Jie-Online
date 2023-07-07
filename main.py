@@ -1,5 +1,6 @@
 import socket
 from threading import Thread
+import csv
 
 
 def client_game():
@@ -7,7 +8,7 @@ def client_game():
     energy = 0
     fk = 1
     list_choices(energy, fk)
-    print("Waiting for the server...")
+    print("Waiting for the server...\n")
     tcp_socket.recv(1024).decode("UTF-8")  # begins with?
 
 
@@ -33,86 +34,50 @@ def server_game():
 
 
 def list_choices(energy, free_knife):
-    choice_list = ['a']
-    if energy >= 0:
-        choice_list.extend(['b', 'c', 'd', 'f', 'h', 'i'])
-    if energy >= 1:
-        choice_list.extend(['e', 'j', 'k', 'l', 'o'])
-    if energy >= 2:
-        choice_list.extend(['g', 'p'])
-    if energy >= 3:
-        choice_list.append('q')
-    if energy >= 4:
-        choice_list.append('r')
-    if energy >= 5:
-        choice_list.append('s')
-    if energy >= 6:
-        choice_list.append('t')
-    if energy >= 7:
-        choice_list.extend(['m', 'u'])
-    if energy >= 8:
-        choice_list.append('v')
-    if energy >= 12:
-        choice_list.append('w')
-    if energy >= 35:
-        choice_list.append('x')
-    if free_knife >= 1:
-        choice_list.append('n')
-    print('a. 结')
-    if 'b' in choice_list:
-        print('b. 小防')
-    if 'c' in choice_list:
-        print('c. 大防')
-    if 'd' in choice_list:
-        print('d. 吸')
-    if 'e' in choice_list:
-        print('e. 大吸')
-    if 'f' in choice_list:
-        print('f. 拉')
-    if 'g' in choice_list:
-        print('g. 大拉')
-    if 'h' in choice_list:
-        print('h. 反弹')
-    if 'i' in choice_list:
-        print('i. 摩擦')
-    if 'j' in choice_list:
-        print('j. 收')
-    if 'k' in choice_list:
-        print('k. 青龙收')
-    if 'l' in choice_list:
-        print('l. 金龙收')
-    if 'm' in choice_list:
-        print('m. 抽烟')
-    if 'n' in choice_list:
-        print('n. 免单')
-    if 'o' in choice_list:
-        print('o. 笑波')
-    if 'p' in choice_list:
-        print('p. 电波')
-    if 'q' in choice_list:
-        print('q. 致命')
-    if 'r' in choice_list:
-        print('r. 地波')
-    if 's' in choice_list:
-        print('s. 骗波')
-    if 't' in choice_list:
-        print('t. 派波')
-    if 'u' in choice_list:
-        print('u. 气波')
-    if 'v' in choice_list:
-        print('v. 青龙波')
-    if 'w' in choice_list:
-        print('w. 金龙波')
-    if 'x' in choice_list:
-        print('x. 王圣波')
-    choice = input("Please choose!")
+    option_num = 0
+    option_list = {}
+    choice_list = []
+    for row in option_file:
+        if option_num == 0:
+            option_num += 1
+            continue
+        column_num = 0
+        row_option = row[0]
+        for cell in row:
+            if column_num == 0:
+                column_num += 1
+                option_list[row_option] = []
+                continue
+            option_list[row_option].append(cell)
+            column_num += 1
+        option_num += 1
+    for option in option_list:
+        if option_list[option][1] is str:
+            if free_knife >= 1:
+                choice_list.append('n')
+        else:
+            if energy >= option_list[option][1]:
+                choice_list.append(option_list[option])
+    for option in option_list:
+        if option in choice_list:
+            print(option, '. ', option_list[option][0], sep='')
+    choice = input("Please choose!\n")
     if choice not in choice_list:
-        print("err:choice_not_in_list")
         if mode == 'c':
             tcp_socket.send("err:choice_not_in_list".encode("UTF-8"))
         else:
             return "err:choice_not_in_list"
     else:
+        multiple = False
+        if option_list[choice][2]:
+            if option_list[choice][1] is str:
+                if free_knife >= 2:
+                    multiple = True
+            else:
+                if energy >= 2 * option_list[choice][1]:
+                    multiple = True
+        if multiple:
+            input("You chose " + option_list[choice][0] + ".\nChoose the times of attack.\n")
         if mode == 'c':
             tcp_socket.send(choice.encode("UTF-8"))
             input("Test OK!\n")
@@ -129,11 +94,12 @@ def calc_result():
 
 
 while 1:
-    mode = input("Enter 's' for server mode, or 'c' for client mode.")
+    mode = input("Enter 's' for server mode, or 'c' for client mode.\n")
     if mode == 's' or mode == 'c':
         break
+option_file = csv.reader(open("./config/Option List.csv", encoding='UTF-8'))
 if mode == 'c':
-    server_ip = input("Enter the ip of the server.")
+    server_ip = input("Enter the ip of the server.\n")
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_addr = (server_ip, 38395)
     tcp_socket.connect(server_addr)
