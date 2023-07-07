@@ -366,9 +366,9 @@ with open("./config/Language.txt") as lang:
     language = lang.read()
 while 1:
     if language == "CN":
-        mode = input('输入S作为服务器（须先运行服务器），输入C作为客户端。\n')
+        mode = input('输入S作为服务器（须先运行服务器），输入C作为客户端。\n').lower()
     else:
-        mode = input("Enter S for server mode, or C for client mode.\n")
+        mode = input("Enter S for server mode, or C for client mode.\n").lower()
     if mode == 's' or mode == 'c':
         break
 if mode == 'c':
