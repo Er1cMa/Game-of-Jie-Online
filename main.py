@@ -240,11 +240,11 @@ def display_result_p1(result):
     p0 = result[0]
     p1 = result[1]
     if eval(p0['choice'][1]) == 1:
-        p0_choice = option_list[p0['choice'][0]]
+        p0_choice = option_list[p0['choice'][0]][0]
     else:
         p0_choice = option_list[p0['choice'][0]][0] + '*' + str(eval(p0['choice'][1]))
     if eval(p1['choice'][1]) == 1:
-        p1_choice = option_list[p1['choice'][0]]
+        p1_choice = option_list[p1['choice'][0]][0]
     else:
         p1_choice = option_list[p1['choice'][0]][0] + '*' + str(eval(p1['choice'][1]))
     print("You chose %s, Player 0 chose %s.\n"
