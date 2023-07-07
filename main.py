@@ -5,16 +5,18 @@ import csv
 
 def client_game():
     global p0, p1
-    p0 = {'hp': 2, 'energy': 0, 'fk': 1, 'choice': ''}
-    p1 = {'hp': 2, 'energy': 0, 'fk': 1, 'choice': ''}
+    p0 = {'hp': 2, 'energy': 2, 'fk': 1, 'choice': ''}
+    p1 = {'hp': 2, 'energy': 2, 'fk': 1, 'choice': ''}
     while 1:
         list_choices(p1['energy'], p1['fk'])
-        print("Waiting for the server...\n")
         result = eval(tcp_socket.recv(1024).decode("UTF-8"))  # msg begins with?
         display_result_p1(result)
         if result[2] != 'con':
             break
-    input('End. You can now save this game.\n')
+    if language == "CN":
+        input('游戏结束。您可以现在复制游戏过程以保存。\n')
+    else:
+        input('End. You can now save this game.\n')
 
 
 def recv_choice():
@@ -38,7 +40,10 @@ def server_game():
         display_result_p0(result)
         if result[2] != 'con':
             break
-    input('End. You can now save this game.\n')
+    if language == "CN":
+        input('游戏结束。您可以现在复制游戏过程以保存。\n')
+    else:
+        input('End. You can now save this game.\n')
 
 
 def list_choices(energy, free_knife):
@@ -53,12 +58,15 @@ def list_choices(energy, free_knife):
     for option in option_char_list:
         if option in choice_list:
             print(option, '. ', option_list[option][0], sep='')
-    choice = input("Please choose!\n")
+    if language == "CN":
+        choice = input("请选择！\n")
+    else:
+        choice = input("Please choose!\n")
     if choice not in choice_list:
         if mode == 'c':
-            tcp_socket.send("err:choice_not_in_list".encode("UTF-8"))
+            tcp_socket.send("err".encode("UTF-8"))
         else:
-            p0['choice'] = "err:choice_not_in_list"
+            p0['choice'] = "err"
     else:
         multiple = False
         if option_list[choice][2]:
@@ -69,7 +77,10 @@ def list_choices(energy, free_knife):
                 multiple = True
         times = 1
         if multiple:
-            times = input("You chose " + option_list[choice][0] + ".\nChoose the times of attack.\n")
+            if language == "CN":
+                times = input("你选择了：" + option_list[choice][0] + "。\n请选择出几个。\n")
+            else:
+                times = input("You chose " + option_list[choice][0] + ".\nChoose the times of attack.\n")
         choice_times = choice + str(times)
         if mode == 'c':
             tcp_socket.send(choice_times.encode("UTF-8"))
@@ -79,6 +90,8 @@ def list_choices(energy, free_knife):
 
 def calc_result():
     global p0, p1
+    if p0['choice'] == 'err' or p1['choice'] == 'err':
+        return [p0['choice'], p1['choice']]
     if p0['choice'][0] == 'j':
         p0['fk'] -= eval(p0['choice'][1])
     else:
@@ -209,30 +222,66 @@ def latter_special_damage(former, latter):
 
 
 def display_result_p0(result):
-    if eval(p0['choice'][1]) == 1:
-        p0_choice = option_list[p0['choice'][0]]
+    if len(result) == 2:
+        if result[0] == 'err' and result[1] == 'err':
+            if language == 'CN':
+                input('平局：两人均选择了不可选择的选项。')
+            else:
+                input('Draw: Both players chose unavailable choices.')
+        elif result[0] == 'err':
+            if language == 'CN':
+                input('失败：你选择了不可选择的选项。')
+            else:
+                input('Lose: You chose unavailable choices.')
     else:
-        p0_choice = option_list[p0['choice'][0]][0] + '*' + p0['choice'][1]
-    if eval(p1['choice'][1]) == 1:
-        p1_choice = option_list[p1['choice'][0]]
-    else:
-        p1_choice = option_list[p1['choice'][0]][0] + '*' + p1['choice'][1]
-    print("You chose %s, Player 1 chose %s.\n"
-          "You have %s hp, %s energy, %s free knifes.\n"
-          "Player 1 has %s hp, %s energy, %s free knifes.\n"
-          % (p0_choice, p1_choice, p0['hp'], p0['energy'], p0['fk'], p1['hp'], p1['energy'], p1['fk']))
-    if result[2] == 'dre':
-        input("Draw: Both players are lack of energy or free knifes.\n")
-    if result[2] == 'drh':
-        input("Draw: Both players are lack of hp.\n")
-    if result[2] == 'p0e':
-        input("Lose: You are lack of energy or free knifes.\n")
-    if result[2] == 'p0h':
-        input("Lose: You are lack of hp.\n")
-    if result[2] == 'p1e':
-        input("Win: Player 1 is lack of energy or free knifes.\n")
-    if result[2] == 'p1h':
-        input("Win: Player 1 is lack of hp.\n")
+        if eval(p0['choice'][1]) == 1:
+            p0_choice = option_list[p0['choice'][0]]
+        else:
+            p0_choice = option_list[p0['choice'][0]][0] + '*' + p0['choice'][1]
+        if eval(p1['choice'][1]) == 1:
+            p1_choice = option_list[p1['choice'][0]]
+        else:
+            p1_choice = option_list[p1['choice'][0]][0] + '*' + p1['choice'][1]
+        if language == 'CN':
+            print('你选择了%s，对手选择了%s。\n'
+                  '你有%s滴血，%s费，%s免单。\n'
+                  '对手有%s滴血，%s费，%s免单。\n'
+                  % (p0_choice, p1_choice, p0['hp'], p0['energy'], p0['fk'], p1['hp'], p1['energy'], p1['fk']))
+        else:
+            print("You chose %s, Player 1 chose %s.\n"
+                  "You have %s hp, %s energy, %s free knifes.\n"
+                  "Player 1 has %s hp, %s energy, %s free knifes.\n"
+                  % (p0_choice, p1_choice, p0['hp'], p0['energy'], p0['fk'], p1['hp'], p1['energy'], p1['fk']))
+        if result[2] == 'dre':
+            if language == "CN":
+                input('平局：双方都缺少所需的费或免单。\n')
+            else:
+                input("Draw: Both players are lack of energy or free knifes.\n")
+        if result[2] == 'drh':
+            if language == "CN":
+                input('平局：双方都没血。\n')
+            else:
+                input("Draw: Both players are lack of hp.\n")
+        if result[2] == 'p0e':
+            if language == "CN":
+                input('失败：你缺少所需的费或免单。\n')
+            else:
+                input("Lose: You are lack of energy or free knifes.\n")
+        if result[2] == 'p0h':
+            if language == "CN":
+                input('失败：你没血了。\n')
+            else:
+                input("Lose: You are lack of hp.\n")
+        if result[2] == 'p1e':
+            if language == "CN":
+                input('胜利：对手缺少所需的费或免单。\n')
+            else:
+                input("Win: Player 1 is lack of energy or free knifes.\n")
+        if result[2] == 'p1h':
+            if language == "CN":
+                input('胜利：对手没血了。\n')
+            else:
+                input("Win: Player 1 is lack of hp.\n")
 
 
 def display_result_p1(result):
@@ -247,28 +296,48 @@ def display_result_p1(result):
         p1_choice = option_list[p1['choice'][0]][0]
     else:
         p1_choice = option_list[p1['choice'][0]][0] + '*' + str(eval(p1['choice'][1]))
-    print("You chose %s, Player 0 chose %s.\n"
-          "You have %s hp, %s energy, %s free knifes.\n"
-          "Player 0 has %s hp, %s energy, %s free knifes.\n"
-          % (p1_choice, p0_choice, p1['hp'], p1['energy'], p1['fk'], p0['hp'], p0['energy'], p0['fk']))
+    if language == 'CN':
+        print('你选择了%s，对手选择了%s。\n'
+              '你有%s滴血，%s费，%s免单。\n'
+              '对手有%s滴血，%s费，%s免单。\n'
+              % (p1_choice, p0_choice, p1['hp'], p1['energy'], p1['fk'], p0['hp'], p0['energy'], p0['fk']))
+    else:
+        print("You chose %s, Player 0 chose %s.\n"
+              "You have %s hp, %s energy, %s free knifes.\n"
+              "Player 0 has %s hp, %s energy, %s free knifes.\n"
+              % (p1_choice, p0_choice, p1['hp'], p1['energy'], p1['fk'], p0['hp'], p0['energy'], p0['fk']))
     if result[2] == 'dre':
-        input("Draw: Both players are lack of energy or free knifes.\n")
+        if language == "CN":
+            input('平局：双方都缺少所需的费或免单。\n')
+        else:
+            input("Draw: Both players are lack of energy or free knifes.\n")
     if result[2] == 'drh':
-        input("Draw: Both players are lack of hp.\n")
+        if language == "CN":
+            input('平局：双方都没血。\n')
+        else:
+            input("Draw: Both players are lack of hp.\n")
     if result[2] == 'p1e':
-        input("Lose: You are lack of energy or free knifes.\n")
+        if language == "CN":
+            input('失败：你缺少所需的费或免单。\n')
+        else:
+            input("Lose: You are lack of energy or free knifes.\n")
     if result[2] == 'p1h':
-        input("Lose: You are lack of hp.\n")
+        if language == "CN":
+            input('失败：你没血了。\n')
+        else:
+            input("Lose: You are lack of hp.\n")
     if result[2] == 'p0e':
-        input("Win: Player 0 is lack of energy or free knifes.\n")
+        if language == "CN":
+            input('胜利：对手缺少所需的费或免单。\n')
+        else:
+            input("Win: Player 0 is lack of energy or free knifes.\n")
     if result[2] == 'p0h':
-        input("Win: Player 0 is lack of hp.\n")
+        if language == "CN":
+            input('胜利：对手没血了。\n')
+        else:
+            input("Win: Player 0 is lack of hp.\n")
 
 
-while 1:
-    mode = input("Enter 's' for server mode, or 'c' for client mode.\n")
-    if mode == 's' or mode == 'c':
-        break
 option_file = csv.reader(open("./config/Option List.csv", encoding='UTF-8'))
 option_num = 0
 option_list = {}
@@ -293,8 +362,20 @@ for row in option_file:
         option_list[row_option].append(eval(cell))
         column_num += 1
     option_num += 1
+with open("./config/Language.txt") as lang:
+    language = lang.read()
+while 1:
+    if language == "CN":
+        mode = input('输入S作为服务器（须先运行服务器），输入C作为客户端。\n')
+    else:
+        mode = input("Enter S for server mode, or C for client mode.\n")
+    if mode == 's' or mode == 'c':
+        break
 if mode == 'c':
-    server_ip = input("Enter the ip of the server.\n")
+    if language == 'CN':
+        server_ip = input('请输入服务器的IP地址。\n')
+    else:
+        server_ip = input("Enter the IP address of the server.\n")
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_addr = (server_ip, 38395)
     tcp_socket.connect(server_addr)
